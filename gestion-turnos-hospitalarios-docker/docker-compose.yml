@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # Base de datos MySQL
+  # Nota: MySQL 8.0 oficial es caprichoso en M1/M2. 
+  # Usar "mariadb" es una alternativa 100% compatible con MySQL y mucho más estable en ARM/M1.
+  db:
+    image: mariadb:10.11
+    container_name: mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: gestion_turnos
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+      - db_data:/var/lib/mysql
+
+  # Servidor Web Apache + PHP
+  # Esta imagen es multi-arquitectura por defecto.
+  php-apache:
+    image: php:8.2-apache
+    container_name: apache_server
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "80:80"
+    volumes:
+      - ./www:/var/www/html
+
+  # phpMyAdmin corregido
+  # Usamos la variante 'apache' para evitar el error de símbolos que viste.
+  phpmyadmin:
+    image: phpmyadmin:5.2-apache
+    container_name: phpmyadmin_ui
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "8080:80"
+    environment:
+      - PMA_HOST=db
+      - MYSQL_ROOT_PASSWORD=root_password
+      - UPLOAD_LIMIT=64M
+      - PMA_ABSOLUTE_URI=http://localhost:8080/phpmyadmin/
+    volumes:
+      - ./pma-alias.conf:/etc/apache2/conf-enabled/pma-alias.conf:ro
+volumes:
+  db_data:
