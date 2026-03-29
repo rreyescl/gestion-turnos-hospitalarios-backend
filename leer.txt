@@ -1,0 +1,6 @@
+ejecutar proyecto
+
+
+uvicorn main:app --reloaduvicorn main:app --reload
+
+en caso de mover de lugar el proyecto, hay que eliminar la carpeta .venv y hacer pip install de lo que esta en requeriments.txt
